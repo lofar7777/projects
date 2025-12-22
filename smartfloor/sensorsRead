@@ -1,0 +1,562 @@
+#include <Arduino.h>
+
+// Multiplexer select pins (shared by all 3 muxes)
+const int SEL_S0 = 13;
+const int SEL_S1 = 12;
+const int SEL_S2 = 14;
+const int SEL_S3 = 27;
+
+// Each multiplexer's output pin (must be ADC pins)
+const int MUX1_SIG = 34;
+const int MUX2_SIG = 35;
+const int MUX3_SIG = 32;
+
+// 49th sensor directly connected
+const int DIRECT_SENSOR_PIN = 33;
+
+const int CHANNELS_PER_MUX = 16;
+const int NUM_MUX = 3;
+const int TOTAL_SENSORS = 49;
+
+// Sampling: capture piezo peaks by taking max of multiple quick reads
+const int SAMPLES_PER_READ = 6;
+const int SAMPLE_DELAY_US = 300;
+const int MUX_SETTLE_US = 100;
+
+int sensorValues[TOTAL_SENSORS];
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(SEL_S0, OUTPUT);
+  pinMode(SEL_S1, OUTPUT);
+  pinMode(SEL_S2, OUTPUT);
+  pinMode(SEL_S3, OUTPUT);
+
+  pinMode(MUX1_SIG, INPUT);
+  pinMode(MUX2_SIG, INPUT);
+  pinMode(MUX3_SIG, INPUT);
+  pinMode(DIRECT_SENSOR_PIN, INPUT);
+
+  Serial.println("49 Piezo Sensors Ready (3x16-mux + 1 direct)");
+}
+
+void setMuxChannel(int channel) {
+  digitalWrite(SEL_S0, channel & 0x01);
+  digitalWrite(SEL_S1, (channel >> 1) & 0x01);
+  digitalWrite(SEL_S2, (channel >> 2) & 0x01);
+  digitalWrite(SEL_S3, (channel >> 3) & 0x01);
+}
+
+int readMuxMax(int muxPin) {
+  int vmax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(muxPin);
+    if (v > vmax) vmax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  return vmax;
+}
+
+void loop() {
+  // Read 16 channels × 3 muxes = 48 sensors
+  for (int ch = 0; ch < CHANNELS_PER_MUX; ++ch) {
+    setMuxChannel(ch);
+    delayMicroseconds(MUX_SETTLE_US);
+
+    // MUX1: channels 0..15
+    sensorValues[0 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX1_SIG);
+
+    // MUX2: channels 16..31
+    sensorValues[1 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX2_SIG);
+
+    // MUX3: channels 32..47
+    sensorValues[2 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX3_SIG);
+  }
+
+  // Read 49th sensor
+  int directMax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(DIRECT_SENSOR_PIN);
+    if (v > directMax) directMax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  sensorValues[48] = directMax;
+
+  // Print all 49 values as CSV
+  for (int i = 0; i < TOTAL_SENSORS; ++i) {
+    Serial.print(sensorValues[i]);
+    if (i < TOTAL_SENSORS - 1) Serial.print(',');
+  }
+  Serial.println();
+
+  delay(20);
+}#include <Arduino.h>
+
+// Multiplexer select pins (shared by all 3 muxes)
+const int SEL_S0 = 13;
+const int SEL_S1 = 12;
+const int SEL_S2 = 14;
+const int SEL_S3 = 27;
+
+// Each multiplexer's output pin (must be ADC pins)
+const int MUX1_SIG = 34;
+const int MUX2_SIG = 35;
+const int MUX3_SIG = 32;
+
+// 49th sensor directly connected
+const int DIRECT_SENSOR_PIN = 33;
+
+const int CHANNELS_PER_MUX = 16;
+const int NUM_MUX = 3;
+const int TOTAL_SENSORS = 49;
+
+// Sampling: capture piezo peaks by taking max of multiple quick reads
+const int SAMPLES_PER_READ = 6;
+const int SAMPLE_DELAY_US = 300;
+const int MUX_SETTLE_US = 100;
+
+int sensorValues[TOTAL_SENSORS];
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(SEL_S0, OUTPUT);
+  pinMode(SEL_S1, OUTPUT);
+  pinMode(SEL_S2, OUTPUT);
+  pinMode(SEL_S3, OUTPUT);
+
+  pinMode(MUX1_SIG, INPUT);
+  pinMode(MUX2_SIG, INPUT);
+  pinMode(MUX3_SIG, INPUT);
+  pinMode(DIRECT_SENSOR_PIN, INPUT);
+
+  Serial.println("49 Piezo Sensors Ready (3x16-mux + 1 direct)");
+}
+
+void setMuxChannel(int channel) {
+  digitalWrite(SEL_S0, channel & 0x01);
+  digitalWrite(SEL_S1, (channel >> 1) & 0x01);
+  digitalWrite(SEL_S2, (channel >> 2) & 0x01);
+  digitalWrite(SEL_S3, (channel >> 3) & 0x01);
+}
+
+int readMuxMax(int muxPin) {
+  int vmax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(muxPin);
+    if (v > vmax) vmax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  return vmax;
+}
+
+void loop() {
+  // Read 16 channels × 3 muxes = 48 sensors
+  for (int ch = 0; ch < CHANNELS_PER_MUX; ++ch) {
+    setMuxChannel(ch);
+    delayMicroseconds(MUX_SETTLE_US);
+
+    // MUX1: channels 0..15
+    sensorValues[0 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX1_SIG);
+
+    // MUX2: channels 16..31
+    sensorValues[1 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX2_SIG);
+
+    // MUX3: channels 32..47
+    sensorValues[2 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX3_SIG);
+  }
+
+  // Read 49th sensor
+  int directMax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(DIRECT_SENSOR_PIN);
+    if (v > directMax) directMax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  sensorValues[48] = directMax;
+
+  // Print all 49 values as CSV
+  for (int i = 0; i < TOTAL_SENSORS; ++i) {
+    Serial.print(sensorValues[i]);
+    if (i < TOTAL_SENSORS - 1) Serial.print(',');
+  }
+  Serial.println();
+
+  delay(20);
+}#include <Arduino.h>
+
+// Multiplexer select pins (shared by all 3 muxes)
+const int SEL_S0 = 13;
+const int SEL_S1 = 12;
+const int SEL_S2 = 14;
+const int SEL_S3 = 27;
+
+// Each multiplexer's output pin (must be ADC pins)
+const int MUX1_SIG = 34;
+const int MUX2_SIG = 35;
+const int MUX3_SIG = 32;
+
+// 49th sensor directly connected
+const int DIRECT_SENSOR_PIN = 33;
+
+const int CHANNELS_PER_MUX = 16;
+const int NUM_MUX = 3;
+const int TOTAL_SENSORS = 49;
+
+// Sampling: capture piezo peaks by taking max of multiple quick reads
+const int SAMPLES_PER_READ = 6;
+const int SAMPLE_DELAY_US = 300;
+const int MUX_SETTLE_US = 100;
+
+int sensorValues[TOTAL_SENSORS];
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(SEL_S0, OUTPUT);
+  pinMode(SEL_S1, OUTPUT);
+  pinMode(SEL_S2, OUTPUT);
+  pinMode(SEL_S3, OUTPUT);
+
+  pinMode(MUX1_SIG, INPUT);
+  pinMode(MUX2_SIG, INPUT);
+  pinMode(MUX3_SIG, INPUT);
+  pinMode(DIRECT_SENSOR_PIN, INPUT);
+
+  Serial.println("49 Piezo Sensors Ready (3x16-mux + 1 direct)");
+}
+
+void setMuxChannel(int channel) {
+  digitalWrite(SEL_S0, channel & 0x01);
+  digitalWrite(SEL_S1, (channel >> 1) & 0x01);
+  digitalWrite(SEL_S2, (channel >> 2) & 0x01);
+  digitalWrite(SEL_S3, (channel >> 3) & 0x01);
+}
+
+int readMuxMax(int muxPin) {
+  int vmax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(muxPin);
+    if (v > vmax) vmax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  return vmax;
+}
+
+void loop() {
+  // Read 16 channels × 3 muxes = 48 sensors
+  for (int ch = 0; ch < CHANNELS_PER_MUX; ++ch) {
+    setMuxChannel(ch);
+    delayMicroseconds(MUX_SETTLE_US);
+
+    // MUX1: channels 0..15
+    sensorValues[0 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX1_SIG);
+
+    // MUX2: channels 16..31
+    sensorValues[1 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX2_SIG);
+
+    // MUX3: channels 32..47
+    sensorValues[2 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX3_SIG);
+  }
+
+  // Read 49th sensor
+  int directMax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(DIRECT_SENSOR_PIN);
+    if (v > directMax) directMax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  sensorValues[48] = directMax;
+
+  // Print all 49 values as CSV
+  for (int i = 0; i < TOTAL_SENSORS; ++i) {
+    Serial.print(sensorValues[i]);
+    if (i < TOTAL_SENSORS - 1) Serial.print(',');
+  }
+  Serial.println();
+
+  delay(20);
+}#include <Arduino.h>
+
+// Multiplexer select pins (shared by all 3 muxes)
+const int SEL_S0 = 13;
+const int SEL_S1 = 12;
+const int SEL_S2 = 14;
+const int SEL_S3 = 27;
+
+// Each multiplexer's output pin (must be ADC pins)
+const int MUX1_SIG = 34;
+const int MUX2_SIG = 35;
+const int MUX3_SIG = 32;
+
+// 49th sensor directly connected
+const int DIRECT_SENSOR_PIN = 33;
+
+const int CHANNELS_PER_MUX = 16;
+const int NUM_MUX = 3;
+const int TOTAL_SENSORS = 49;
+
+// Sampling: capture piezo peaks by taking max of multiple quick reads
+const int SAMPLES_PER_READ = 6;
+const int SAMPLE_DELAY_US = 300;
+const int MUX_SETTLE_US = 100;
+
+int sensorValues[TOTAL_SENSORS];
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(SEL_S0, OUTPUT);
+  pinMode(SEL_S1, OUTPUT);
+  pinMode(SEL_S2, OUTPUT);
+  pinMode(SEL_S3, OUTPUT);
+
+  pinMode(MUX1_SIG, INPUT);
+  pinMode(MUX2_SIG, INPUT);
+  pinMode(MUX3_SIG, INPUT);
+  pinMode(DIRECT_SENSOR_PIN, INPUT);
+
+  Serial.println("49 Piezo Sensors Ready (3x16-mux + 1 direct)");
+}
+
+void setMuxChannel(int channel) {
+  digitalWrite(SEL_S0, channel & 0x01);
+  digitalWrite(SEL_S1, (channel >> 1) & 0x01);
+  digitalWrite(SEL_S2, (channel >> 2) & 0x01);
+  digitalWrite(SEL_S3, (channel >> 3) & 0x01);
+}
+
+int readMuxMax(int muxPin) {
+  int vmax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(muxPin);
+    if (v > vmax) vmax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  return vmax;
+}
+
+void loop() {
+  // Read 16 channels × 3 muxes = 48 sensors
+  for (int ch = 0; ch < CHANNELS_PER_MUX; ++ch) {
+    setMuxChannel(ch);
+    delayMicroseconds(MUX_SETTLE_US);
+
+    // MUX1: channels 0..15
+    sensorValues[0 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX1_SIG);
+
+    // MUX2: channels 16..31
+    sensorValues[1 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX2_SIG);
+
+    // MUX3: channels 32..47
+    sensorValues[2 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX3_SIG);
+  }
+
+  // Read 49th sensor
+  int directMax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(DIRECT_SENSOR_PIN);
+    if (v > directMax) directMax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  sensorValues[48] = directMax;
+
+  // Print all 49 values as CSV
+  for (int i = 0; i < TOTAL_SENSORS; ++i) {
+    Serial.print(sensorValues[i]);
+    if (i < TOTAL_SENSORS - 1) Serial.print(',');
+  }
+  Serial.println();
+
+  delay(20);
+}#include <Arduino.h>
+
+// Multiplexer select pins (shared by all 3 muxes)
+const int SEL_S0 = 13;
+const int SEL_S1 = 12;
+const int SEL_S2 = 14;
+const int SEL_S3 = 27;
+
+// Each multiplexer's output pin (must be ADC pins)
+const int MUX1_SIG = 34;
+const int MUX2_SIG = 35;
+const int MUX3_SIG = 32;
+
+// 49th sensor directly connected
+const int DIRECT_SENSOR_PIN = 33;
+
+const int CHANNELS_PER_MUX = 16;
+const int NUM_MUX = 3;
+const int TOTAL_SENSORS = 49;
+
+// Sampling: capture piezo peaks by taking max of multiple quick reads
+const int SAMPLES_PER_READ = 6;
+const int SAMPLE_DELAY_US = 300;
+const int MUX_SETTLE_US = 100;
+
+int sensorValues[TOTAL_SENSORS];
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(SEL_S0, OUTPUT);
+  pinMode(SEL_S1, OUTPUT);
+  pinMode(SEL_S2, OUTPUT);
+  pinMode(SEL_S3, OUTPUT);
+
+  pinMode(MUX1_SIG, INPUT);
+  pinMode(MUX2_SIG, INPUT);
+  pinMode(MUX3_SIG, INPUT);
+  pinMode(DIRECT_SENSOR_PIN, INPUT);
+
+  Serial.println("49 Piezo Sensors Ready (3x16-mux + 1 direct)");
+}
+
+void setMuxChannel(int channel) {
+  digitalWrite(SEL_S0, channel & 0x01);
+  digitalWrite(SEL_S1, (channel >> 1) & 0x01);
+  digitalWrite(SEL_S2, (channel >> 2) & 0x01);
+  digitalWrite(SEL_S3, (channel >> 3) & 0x01);
+}
+
+int readMuxMax(int muxPin) {
+  int vmax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(muxPin);
+    if (v > vmax) vmax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  return vmax;
+}
+
+void loop() {
+  // Read 16 channels × 3 muxes = 48 sensors
+  for (int ch = 0; ch < CHANNELS_PER_MUX; ++ch) {
+    setMuxChannel(ch);
+    delayMicroseconds(MUX_SETTLE_US);
+
+    // MUX1: channels 0..15
+    sensorValues[0 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX1_SIG);
+
+    // MUX2: channels 16..31
+    sensorValues[1 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX2_SIG);
+
+    // MUX3: channels 32..47
+    sensorValues[2 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX3_SIG);
+  }
+
+  // Read 49th sensor
+  int directMax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(DIRECT_SENSOR_PIN);
+    if (v > directMax) directMax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  sensorValues[48] = directMax;
+
+  // Print all 49 values as CSV
+  for (int i = 0; i < TOTAL_SENSORS; ++i) {
+    Serial.print(sensorValues[i]);
+    if (i < TOTAL_SENSORS - 1) Serial.print(',');
+  }
+  Serial.println();
+
+  delay(20);
+}#include <Arduino.h>
+
+// Multiplexer select pins (shared by all 3 muxes)
+const int SEL_S0 = 13;
+const int SEL_S1 = 12;
+const int SEL_S2 = 14;
+const int SEL_S3 = 27;
+
+// Each multiplexer's output pin (must be ADC pins)
+const int MUX1_SIG = 34;
+const int MUX2_SIG = 35;
+const int MUX3_SIG = 32;
+
+// 49th sensor directly connected
+const int DIRECT_SENSOR_PIN = 33;
+
+const int CHANNELS_PER_MUX = 16;
+const int NUM_MUX = 3;
+const int TOTAL_SENSORS = 49;
+
+// Sampling: capture piezo peaks by taking max of multiple quick reads
+const int SAMPLES_PER_READ = 6;
+const int SAMPLE_DELAY_US = 300;
+const int MUX_SETTLE_US = 100;
+
+int sensorValues[TOTAL_SENSORS];
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(SEL_S0, OUTPUT);
+  pinMode(SEL_S1, OUTPUT);
+  pinMode(SEL_S2, OUTPUT);
+  pinMode(SEL_S3, OUTPUT);
+
+  pinMode(MUX1_SIG, INPUT);
+  pinMode(MUX2_SIG, INPUT);
+  pinMode(MUX3_SIG, INPUT);
+  pinMode(DIRECT_SENSOR_PIN, INPUT);
+
+  Serial.println("49 Piezo Sensors Ready (3x16-mux + 1 direct)");
+}
+
+void setMuxChannel(int channel) {
+  digitalWrite(SEL_S0, channel & 0x01);
+  digitalWrite(SEL_S1, (channel >> 1) & 0x01);
+  digitalWrite(SEL_S2, (channel >> 2) & 0x01);
+  digitalWrite(SEL_S3, (channel >> 3) & 0x01);
+}
+
+int readMuxMax(int muxPin) {
+  int vmax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(muxPin);
+    if (v > vmax) vmax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  return vmax;
+}
+
+void loop() {
+  // Read 16 channels × 3 muxes = 48 sensors
+  for (int ch = 0; ch < CHANNELS_PER_MUX; ++ch) {
+    setMuxChannel(ch);
+    delayMicroseconds(MUX_SETTLE_US);
+
+    // MUX1: channels 0..15
+    sensorValues[0 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX1_SIG);
+
+    // MUX2: channels 16..31
+    sensorValues[1 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX2_SIG);
+
+    // MUX3: channels 32..47
+    sensorValues[2 * CHANNELS_PER_MUX + ch] = readMuxMax(MUX3_SIG);
+  }
+
+  // Read 49th sensor
+  int directMax = 0;
+  for (int s = 0; s < SAMPLES_PER_READ; ++s) {
+    int v = analogRead(DIRECT_SENSOR_PIN);
+    if (v > directMax) directMax = v;
+    delayMicroseconds(SAMPLE_DELAY_US);
+  }
+  sensorValues[48] = directMax;
+
+  // Print all 49 values as CSV
+  for (int i = 0; i < TOTAL_SENSORS; ++i) {
+    Serial.print(sensorValues[i]);
+    if (i < TOTAL_SENSORS - 1) Serial.print(',');
+  }
+  Serial.println();
+
+  delay(20);
+}
+
+
+// This code is to read all the values from the 49 piezo sensors using esp32. 
