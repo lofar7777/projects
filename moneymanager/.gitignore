@@ -1,0 +1,28 @@
+# Build
+target/
+build/
+out/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+application-local.properties
+application-dev.properties
+
+# Gradle
+.gradle/
