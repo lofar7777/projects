@@ -1,0 +1,102 @@
+# =========================
+# Java / Spring Boot
+# =========================
+
+# Compiled Java files
+*.class
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+build/
+
+# Logs
+*.log
+
+
+# =========================
+# Environment / Secrets
+# =========================
+
+.env
+.env.*
+!.env.example
+
+# Spring local configuration
+application-local.properties
+application-local.yml
+application-local.yaml
+
+
+# =========================
+# IntelliJ IDEA
+# =========================
+
+.idea/
+*.iml
+*.iws
+*.ipr
+
+
+# =========================
+# Eclipse / Spring Tool Suite
+# =========================
+
+.classpath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+
+# =========================
+# VS Code
+# =========================
+
+.vscode/
+
+
+# =========================
+# Frontend / Node
+# =========================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Frontend build output
+dist/
+build/
+
+# Framework caches
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+
+# Coverage
+coverage/
+
+
+# =========================
+# OS generated files
+# =========================
+
+.DS_Store
+Thumbs.db
+
+
+# =========================
+# Temporary files
+# =========================
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*~

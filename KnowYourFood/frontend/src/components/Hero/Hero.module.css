@@ -1,0 +1,46 @@
+.hero{
+    min-height: 70vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #f5f7fa;
+}
+
+.content{
+    text-align: center;
+    max-width: 700px;
+    padding: 2rem;
+}
+
+.content h1{
+    font-size: 3rem;
+    margin-bottom: 1rem;
+
+}
+
+.content p{
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+.button{
+    background: #2d7ff9;
+    color: white;
+    
+    border: none;
+
+    padding: 1rem 2rem;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-size: 1rem;
+}
+
+.button:hover{
+    background: #1d67d7;
+}
